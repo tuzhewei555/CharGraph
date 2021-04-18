@@ -8,13 +8,12 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ColorConvertOp;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.*;
 import java.util.List;
-import java.util.Set;
 
 public class Main {
-
+    static final int CHARBLOCK_WIDTH = 6;
+    static final int CHARBLOCK_HEIGHT = 8;
     public static void main(String[] args) throws IOException {
         //设置字符像素表
         List<Set<Pair<Integer,Integer>>> list = new ArrayList<Set<Pair<Integer,Integer>>>();
@@ -22,13 +21,26 @@ public class Main {
         charDraw.add(new Pair<Integer, Integer>(1,1));
         list.add(charDraw);
         Set<Pair<Integer,Integer>> charDraw2 = new HashSet<Pair<Integer,Integer>>();
-        charDraw.add(new Pair<Integer, Integer>(1,1));
-        charDraw.add(new Pair<Integer, Integer>(3,3));
-        charDraw.add(new Pair<Integer, Integer>(5,5));
+        charDraw2.add(new Pair<Integer, Integer>(1,1));
+        charDraw2.add(new Pair<Integer, Integer>(3,3));
+        charDraw2.add(new Pair<Integer, Integer>(5,5));
         list.add(charDraw2);
 
+        //计算字符密度表
+        Map<Integer, List<Set<Pair<Integer,Integer>>>> densityMap = new HashMap<>();
+        for (Set<Pair<Integer,Integer>> chard : list){
+            if(!densityMap.containsKey(chard.size())){
+                List<Set<Pair<Integer,Integer>>> tmp= new ArrayList<>();
+                tmp.add(chard);
+                densityMap.put(chard.size(),tmp);
+            } else{
+                densityMap.get(chard.size()).add(chard);
+            }
+        }
+        System.out.println(densityMap.toString());
+
         //读图片文件
-        BufferedImage src = ImageIO.read(new File("E:/MyPrograms/CharGraph/pic01.jpg"));
+        BufferedImage src = ImageIO.read(new File("./pic01.jpg"));
 
         //灰度滤镜
         ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
@@ -45,18 +57,31 @@ public class Main {
 
         //初始化像素矩阵,并计算灰度处理后的图片最深值和最浅值
         int [][] pixels = new int[src.getWidth()][src.getHeight()];
-
+        int maxValue = 0;
+        int minValue = 255;
         for(int x=0;x<src.getWidth();x++){
             for(int y=0;y<src.getHeight();y++){
-                pixels[x][y]=src.getRGB(x,y) & 0xff;
+                int pixelValue = src.getRGB(x,y) & 0xff;
+                pixels[x][y]=pixelValue;
+                maxValue = Math.max(pixelValue, maxValue);
+                minValue = Math.min(pixelValue, minValue);
+            }
+        }
+        System.out.println(maxValue);
+        System.out.println(minValue);
 
+        //计算字符密度表
+        int charDensityMax = Collections.max(densityMap.keySet());
+        int charDensityMin = Collections.min(densityMap.keySet());
+
+        //像素=>字符转换
+        for(int x=0;x<src.getWidth();x+=CHARBLOCK_WIDTH) {
+            for (int y = 0; y < src.getHeight(); y += CHARBLOCK_HEIGHT) {
+                
             }
         }
 
-        //计算灰度处理后的图片最深值和最浅值
-
-
-        ImageIO.write(src, "JPEG", new File("E:/MyPrograms/CharGraph/result.jpg"));
+        ImageIO.write(src, "JPEG", new File("./result.jpg"));
 
     }
 }
