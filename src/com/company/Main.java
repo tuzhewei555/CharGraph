@@ -43,9 +43,7 @@ public class Main {
         BufferedImage src = ImageIO.read(new File("./pic01.jpg"));
 
         //灰度滤镜
-        ColorSpace cs = ColorSpace.getInstance(ColorSpace.CS_GRAY);
-        ColorConvertOp op = new ColorConvertOp(cs, null);
-        src = op.filter(src, null);
+        src = new ColorConvertOp(ColorSpace.getInstance(ColorSpace.CS_GRAY), null).filter(src, null);
 
         int a = src.getRGB(1,1);
         System.out.println( a & 0xff);
@@ -74,14 +72,48 @@ public class Main {
         int charDensityMax = Collections.max(densityMap.keySet());
         int charDensityMin = Collections.min(densityMap.keySet());
 
+        //初始化输出图片，全白
+        BufferedImage output = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
+        Graphics graphics = output.getGraphics();
+        graphics.setColor(Color.WHITE);
+        graphics.fillRect(0,0, output.getWidth(), output.getHeight());
+
         //像素=>字符转换
-        for(int x=0;x<src.getWidth();x+=CHARBLOCK_WIDTH) {
-            for (int y = 0; y < src.getHeight(); y += CHARBLOCK_HEIGHT) {
-                
+        for(int x=0;x<src.getWidth()- CHARBLOCK_WIDTH;x+=CHARBLOCK_WIDTH) {
+            for (int y = 0; y < src.getHeight() - CHARBLOCK_HEIGHT; y += CHARBLOCK_HEIGHT) {
+
+                int sum=0;
+                for(int i=x;i<x+CHARBLOCK_WIDTH;i++){
+                    for (int j=y;j<y+CHARBLOCK_HEIGHT;j++){
+                        sum+=pixels[i][j];
+                    }
+                }
+                float average = sum/(CHARBLOCK_HEIGHT * CHARBLOCK_WIDTH);
+                float charDensity = (charDensityMax - charDensityMin) * average/255 + charDensityMin;
+
+                Set<Pair<Integer,Integer>> charDrawUsed;
+                if (densityMap.containsKey(Math.round(charDensity))){
+                    charDrawUsed = densityMap.get(Math.round(charDensity)).get(0);
+                } else{
+                    int candidate = 0;
+                    float currentBest = charDensityMax;
+                    for (int n :densityMap.keySet()){
+                        if (Math.abs(n - charDensity) < currentBest){
+                            candidate = n;
+                            currentBest = Math.abs(n - charDensity);
+                        }
+                    }
+                    charDrawUsed = densityMap.get(candidate).get(0);
+                }
+
+                for (Pair<Integer,Integer> p : charDrawUsed){
+                    output.setRGB(x + p.getKey(), y+ p.getValue(), 255);
+                }
+
             }
         }
 
-        ImageIO.write(src, "JPEG", new File("./result.jpg"));
+        ImageIO.write(output, "JPEG", new File("./result.jpg"));
 
     }
 }
