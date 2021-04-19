@@ -16,12 +16,14 @@ public class Main {
     static final int CHARBLOCK_WIDTH = 6;
     static final int CHARBLOCK_HEIGHT = 8;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         //设置字符像素表
         //Pair<Integer, Integer>代表一个像素，即一个点；
         //Set<Pair<Integer, Integer>>代表一个字符包含的所有像素的坐标
         //List<Set<Pair<Integer, Integer>>>代表字符库内所有可用的字符
         List<Set<Pair<Integer, Integer>>> list = new ArrayList<Set<Pair<Integer, Integer>>>();
+        Set<Pair<Integer, Integer>> charDrawempty = new HashSet<Pair<Integer, Integer>>();
+        list.add(charDrawempty);
         Set<Pair<Integer, Integer>> charDraw = new HashSet<Pair<Integer, Integer>>();
         charDraw.add(new Pair<Integer, Integer>(1, 1));
         list.add(charDraw);
@@ -68,7 +70,12 @@ public class Main {
         System.out.println(densityMap.toString());
 
         //读图片文件
-        BufferedImage src = ImageIO.read(new File("./pic01.jpg"));
+        BufferedImage src = null;
+        try {
+            src = ImageIO.read(new File("./pic01.jpg"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         //压缩图片
 
@@ -111,7 +118,7 @@ public class Main {
                     }
                 }
                 float average = sum / (CHARBLOCK_HEIGHT * CHARBLOCK_WIDTH);
-                float charDensity = (charDensityMax - charDensityMin) * average / 255 + charDensityMin;
+                float charDensity = charDensityMax - (charDensityMax - charDensityMin) * average / 255 ;
 
                 //选取合适的字符
                 Set<Pair<Integer, Integer>> charDrawUsed;
@@ -131,13 +138,17 @@ public class Main {
 
                 //将字符写入输出图片
                 for (Pair<Integer, Integer> p : charDrawUsed) {
-                    output.setRGB(x + p.getKey(), y + p.getValue(), 255);
+                    output.setRGB(x + p.getKey(), y + p.getValue(), 0);
                 }
 
             }
         }
 
-        ImageIO.write(output, "JPEG", new File("./result.jpg"));
+        try {
+            ImageIO.write(output, "JPEG", new File("./result.jpg"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 }
