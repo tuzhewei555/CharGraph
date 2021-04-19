@@ -13,8 +13,8 @@ import java.util.*;
 import java.util.List;
 
 public class Main {
-    static final int CHARBLOCK_WIDTH = 6;
-    static final int CHARBLOCK_HEIGHT = 8;
+    static final int CHARBLOCK_WIDTH = 6;   //单位字符占用宽度
+    static final int CHARBLOCK_HEIGHT = 8;  //单位字符占用高度
 
     public static void main(String[] args) {
         //设置字符像素表
@@ -78,6 +78,7 @@ public class Main {
         }
 
         //压缩图片
+        //TODO:如果原图大于2560 x 1600，要进行压缩
 
         //灰度滤镜
         src = new ColorConvertOp(ColorSpace.getInstance(ColorSpace.CS_GRAY), null).filter(src, null);
@@ -121,6 +122,7 @@ public class Main {
                 float charDensity = charDensityMax - (charDensityMax - charDensityMin) * average / 255 ;
 
                 //选取合适的字符
+                //TODO:在所有可用字符中，选取字符像素分布和图片最相近的字符
                 Set<Pair<Integer, Integer>> charDrawUsed;
                 if (densityMap.containsKey(Math.round(charDensity))) {
                     charDrawUsed = densityMap.get(Math.round(charDensity)).get(0);
