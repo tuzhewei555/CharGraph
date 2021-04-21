@@ -70,15 +70,32 @@ public class Main {
         System.out.println(densityMap.toString());
 
         //读图片文件
-        BufferedImage src = null;
+        BufferedImage srcOrigin = null;
         try {
-            src = ImageIO.read(new File("./pic01.jpg"));
+            srcOrigin = ImageIO.read(new File("./pic01.jpg"));
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        //压缩图片
-        //TODO:如果原图大于2560 x 1600，要进行压缩
+        //压缩图片，仅在原图长度或宽度大于规定值时才压缩
+        final int limitWidth = 2560;
+        final int limitHeight = 1600;
+        BufferedImage src;
+        if (srcOrigin.getWidth()>limitWidth || srcOrigin.getHeight() >limitHeight) {
+            //在等比压缩的前提下，使压缩后的图片越大越好（长或宽之中的一个达到极限值）
+            int targetWidth,targetHeight;
+            if (srcOrigin.getWidth() * limitHeight > srcOrigin.getHeight() * limitWidth){
+                targetWidth = limitWidth;
+                targetHeight = Math.round(srcOrigin.getHeight()*limitWidth/srcOrigin.getWidth());
+            } else{
+                targetWidth = Math.round(srcOrigin.getWidth()*limitHeight/srcOrigin.getHeight());
+                targetHeight = limitHeight;
+            }
+            src = new BufferedImage(targetWidth, targetHeight, srcOrigin.getType());
+            src.getGraphics().drawImage(srcOrigin.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH), 0, 0, null);
+        } else{
+            src = srcOrigin;
+        }
 
         //灰度滤镜
         src = new ColorConvertOp(ColorSpace.getInstance(ColorSpace.CS_GRAY), null).filter(src, null);
