@@ -16,43 +16,14 @@ public class Main {
     static final int CHARBLOCK_WIDTH = 6;   //单位字符占用宽度
     static final int CHARBLOCK_HEIGHT = 8;  //单位字符占用高度
 
+    //Pair<Integer, Integer>代表一个像素，即一个点；
+    //Set<Pair<Integer, Integer>>代表一个字符包含的所有像素的坐标
+    //List<Set<Pair<Integer, Integer>>>代表字符库内所有可用的字符
+    private static List<Set<Pair<Integer, Integer>>> list;
+
     public static void main(String[] args) {
         //设置字符像素表
-        //Pair<Integer, Integer>代表一个像素，即一个点；
-        //Set<Pair<Integer, Integer>>代表一个字符包含的所有像素的坐标
-        //List<Set<Pair<Integer, Integer>>>代表字符库内所有可用的字符
-        List<Set<Pair<Integer, Integer>>> list = new ArrayList<Set<Pair<Integer, Integer>>>();
-        Set<Pair<Integer, Integer>> charDrawempty = new HashSet<Pair<Integer, Integer>>();
-        list.add(charDrawempty);
-        Set<Pair<Integer, Integer>> charDraw = new HashSet<Pair<Integer, Integer>>();
-        charDraw.add(new Pair<Integer, Integer>(1, 1));
-        list.add(charDraw);
-        Set<Pair<Integer, Integer>> charDraw2 = new HashSet<Pair<Integer, Integer>>();
-        charDraw2.add(new Pair<Integer, Integer>(1, 1));
-        charDraw2.add(new Pair<Integer, Integer>(3, 3));
-        charDraw2.add(new Pair<Integer, Integer>(5, 5));
-        list.add(charDraw2);
-        Set<Pair<Integer, Integer>> charDraw3 = new HashSet<Pair<Integer, Integer>>();
-        charDraw3.add(new Pair<Integer, Integer>(1, 1));
-        charDraw3.add(new Pair<Integer, Integer>(2, 1));
-        charDraw3.add(new Pair<Integer, Integer>(3, 1));
-        charDraw3.add(new Pair<Integer, Integer>(4, 1));
-        charDraw3.add(new Pair<Integer, Integer>(5, 1));
-        charDraw3.add(new Pair<Integer, Integer>(1, 2));
-        charDraw3.add(new Pair<Integer, Integer>(1, 3));
-        charDraw3.add(new Pair<Integer, Integer>(1, 4));
-        charDraw3.add(new Pair<Integer, Integer>(2, 4));
-        charDraw3.add(new Pair<Integer, Integer>(3, 4));
-        charDraw3.add(new Pair<Integer, Integer>(4, 4));
-        charDraw3.add(new Pair<Integer, Integer>(5, 4));
-        charDraw3.add(new Pair<Integer, Integer>(5, 5));
-        charDraw3.add(new Pair<Integer, Integer>(5, 6));
-        charDraw3.add(new Pair<Integer, Integer>(5, 7));
-        charDraw3.add(new Pair<Integer, Integer>(4, 7));
-        charDraw3.add(new Pair<Integer, Integer>(3, 7));
-        charDraw3.add(new Pair<Integer, Integer>(2, 7));
-        charDraw3.add(new Pair<Integer, Integer>(1, 7));
-        list.add(charDraw3);
+        readConfigPicture();
 
         //计算字符密度表
         //Map的key值Integer为字符密度，即字符包含的黑色像素的数量
@@ -81,19 +52,19 @@ public class Main {
         final int limitWidth = 2560;
         final int limitHeight = 1600;
         BufferedImage src;
-        if (srcOrigin.getWidth()>limitWidth || srcOrigin.getHeight() >limitHeight) {
+        if (srcOrigin.getWidth() > limitWidth || srcOrigin.getHeight() > limitHeight) {
             //在等比压缩的前提下，使压缩后的图片越大越好（长或宽之中的一个达到极限值）
-            int targetWidth,targetHeight;
-            if (srcOrigin.getWidth() * limitHeight > srcOrigin.getHeight() * limitWidth){
+            int targetWidth, targetHeight;
+            if (srcOrigin.getWidth() * limitHeight > srcOrigin.getHeight() * limitWidth) {
                 targetWidth = limitWidth;
-                targetHeight = Math.round(srcOrigin.getHeight()*limitWidth/srcOrigin.getWidth());
-            } else{
-                targetWidth = Math.round(srcOrigin.getWidth()*limitHeight/srcOrigin.getHeight());
+                targetHeight = Math.round(srcOrigin.getHeight() * limitWidth / srcOrigin.getWidth());
+            } else {
+                targetWidth = Math.round(srcOrigin.getWidth() * limitHeight / srcOrigin.getHeight());
                 targetHeight = limitHeight;
             }
             src = new BufferedImage(targetWidth, targetHeight, srcOrigin.getType());
             src.getGraphics().drawImage(srcOrigin.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH), 0, 0, null);
-        } else{
+        } else {
             src = srcOrigin;
         }
 
@@ -136,7 +107,7 @@ public class Main {
                     }
                 }
                 float average = sum / (CHARBLOCK_HEIGHT * CHARBLOCK_WIDTH);
-                float charDensity = charDensityMax - (charDensityMax - charDensityMin) * average / 255 ;
+                float charDensity = charDensityMax - (charDensityMax - charDensityMin) * average / 255;
 
                 //选取合适的字符
                 //TODO:在所有可用字符中，选取字符像素分布和图片最相近的字符
@@ -169,5 +140,41 @@ public class Main {
             e.printStackTrace();
         }
 
+    }
+
+    //把图片当作配置文件读取，获取字符库
+    private static void readConfigPicture() {
+        //初始化字符像素表
+        if (list == null) {
+            list = new ArrayList<Set<Pair<Integer, Integer>>>();
+        } else {
+            list.clear();
+        }
+        //读配置文件（它是个图片）
+        BufferedImage img = null;
+        try {
+            img = ImageIO.read(new File("./EnjoyDrawingIt.jpg"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        for (int x = 0; x < img.getWidth() - CHARBLOCK_WIDTH - 1; x += (CHARBLOCK_WIDTH + 1)) {
+            for (int y = 0; y < img.getHeight() - CHARBLOCK_HEIGHT - 1; y += (CHARBLOCK_HEIGHT + 1)) {
+                //读取block里画的字符
+                Set<Pair<Integer, Integer>> charDraw = new HashSet<>();
+                for (int i = x; i < x + CHARBLOCK_WIDTH; i++) {
+                    for (int j = y; j < y + CHARBLOCK_HEIGHT; j++) {
+                        //如果该像素是偏黑的话，纳入统计（因为是用画图软件画的，好像没法设置成纯黑也就是像素值0）
+                        if ((img.getRGB(i, j) & 0xff) < 100) {
+                            charDraw.add(new Pair<Integer, Integer>(i - x, j - y));
+                        }
+                    }
+                }
+                if (!charDraw.isEmpty()) {
+                    list.add(charDraw);
+                }
+            }
+        }
+        //最后再加上空白的情况
+        list.add(new HashSet<>());
     }
 }
