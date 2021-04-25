@@ -38,6 +38,7 @@ public class Main {
                 densityMap.get(chard.size()).add(chard);
             }
         }
+        System.out.println("字符密度表:");
         System.out.println(densityMap.toString());
 
         //读图片文件
@@ -83,8 +84,6 @@ public class Main {
                 minValue = Math.min(pixelValue, minValue);
             }
         }
-        System.out.println(maxValue);
-        System.out.println(minValue);
 
         //计算字符密度表的最大和最小密度
         int charDensityMax = Collections.max(densityMap.keySet());
@@ -109,21 +108,43 @@ public class Main {
                 float average = sum / (CHARBLOCK_HEIGHT * CHARBLOCK_WIDTH);
                 float charDensity = charDensityMax - (charDensityMax - charDensityMin) * average / 255;
 
-                //选取合适的字符
-                //TODO:在所有可用字符中，选取字符像素分布和图片最相近的字符
-                Set<Pair<Integer, Integer>> charDrawUsed;
+                //选取合适的字符密度
+                List<Set<Pair<Integer, Integer>>> monoDensityChars;
                 if (densityMap.containsKey(Math.round(charDensity))) {
-                    charDrawUsed = densityMap.get(Math.round(charDensity)).get(0);
+                    monoDensityChars = densityMap.get(Math.round(charDensity));
                 } else {
                     int candidate = 0;
-                    float currentBest = charDensityMax;
+                    float currentBestDensity = charDensityMax;
                     for (int n : densityMap.keySet()) {
-                        if (Math.abs(n - charDensity) < currentBest) {
+                        if (Math.abs(n - charDensity) < currentBestDensity) {
                             candidate = n;
-                            currentBest = Math.abs(n - charDensity);
+                            currentBestDensity = Math.abs(n - charDensity);
                         }
                     }
-                    charDrawUsed = densityMap.get(candidate).get(0);
+                    monoDensityChars = densityMap.get(candidate);
+                }
+
+                //在所有字符密度为currentBestDensity的字符中，选取字符像素分布和原图最接近的
+                Set<Pair<Integer, Integer>> charDrawUsed;
+                if (monoDensityChars.size() == 1) {
+                    //当备选字符只有一个时，直接使用
+                    charDrawUsed = monoDensityChars.get(0);
+                } else {
+                    //当有多个备选字符时，选取字符像素分布和原图最接近的
+                    //计算每个候选字符的每个像素分别对应的图片像素值之和，当和最小时就是我们期望的字符
+                    int currentMinValue = 255 * CHARBLOCK_HEIGHT * CHARBLOCK_WIDTH;
+                    int currentBestCharIndex = 0;
+                    for (int i = 0; i < monoDensityChars.size(); i++) {
+                        int pixelSum = 0;
+                        for (Pair<Integer, Integer> p : monoDensityChars.get(i)) {
+                            pixelSum += pixels[x + p.getKey()][y + p.getValue()];
+                        }
+                        if (pixelSum < currentMinValue) {
+                            currentBestCharIndex = i;
+                            currentMinValue = pixelSum;
+                        }
+                    }
+                    charDrawUsed = monoDensityChars.get(currentBestCharIndex);
                 }
 
                 //将字符写入输出图片
@@ -135,10 +156,11 @@ public class Main {
         }
 
         try {
-            ImageIO.write(output, "JPEG", new File("./result.jpg"));
+            ImageIO.write(output, "JPG", new File("./result.jpg"));
         } catch (IOException e) {
             e.printStackTrace();
         }
+        System.out.println("图片生成成功。");
 
     }
 
