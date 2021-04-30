@@ -69,16 +69,22 @@ public class Main {
             src = srcOrigin;
         }
 
+        //初始化输出图片，全白
+        BufferedImage output = new BufferedImage(src.getWidth(), src.getHeight(), src.getType());
+        Graphics graphics = output.getGraphics();
+        graphics.setColor(Color.WHITE);
+        graphics.fillRect(0, 0, output.getWidth(), output.getHeight());
+
         //灰度滤镜
-        src = new ColorConvertOp(ColorSpace.getInstance(ColorSpace.CS_GRAY), null).filter(src, null);
+        BufferedImage src_gray = new ColorConvertOp(ColorSpace.getInstance(ColorSpace.CS_GRAY), null).filter(src, null);
 
         //初始化像素矩阵,并计算灰度处理后的图片最深值和最浅值
-        int[][] pixels = new int[src.getWidth()][src.getHeight()];
+        int[][] pixels = new int[src_gray.getWidth()][src_gray.getHeight()];
         int maxValue = 0;
         int minValue = 255;
-        for (int x = 0; x < src.getWidth(); x++) {
-            for (int y = 0; y < src.getHeight(); y++) {
-                int pixelValue = src.getRGB(x, y) & 0xff;
+        for (int x = 0; x < src_gray.getWidth(); x++) {
+            for (int y = 0; y < src_gray.getHeight(); y++) {
+                int pixelValue = src_gray.getRGB(x, y) & 0xff;
                 pixels[x][y] = pixelValue;
                 maxValue = Math.max(pixelValue, maxValue);
                 minValue = Math.min(pixelValue, minValue);
@@ -89,15 +95,24 @@ public class Main {
         int charDensityMax = Collections.max(densityMap.keySet());
         int charDensityMin = Collections.min(densityMap.keySet());
 
-        //初始化输出图片，全白
-        BufferedImage output = new BufferedImage(src.getWidth(), src.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
-        Graphics graphics = output.getGraphics();
-        graphics.setColor(Color.WHITE);
-        graphics.fillRect(0, 0, output.getWidth(), output.getHeight());
+        for (int x = CHARBLOCK_WIDTH-1; x < src.getWidth(); x += CHARBLOCK_WIDTH) {
+            for(int y=0;y<src.getHeight();y++){
+                if (pixels[x][y] >150) {
+                    output.setRGB(x, y, src.getRGB(x, y));
+                }
+            }
+        }
+        for (int y = CHARBLOCK_HEIGHT-1; y < src.getHeight(); y += CHARBLOCK_HEIGHT) {
+            for(int x=0;x<src.getWidth();x++){
+                if (pixels[x][y] >150) {
+                    output.setRGB(x, y, src.getRGB(x, y));
+                }
+            }
+        }
 
         //像素=>字符转换
-        for (int x = 0; x < src.getWidth() - CHARBLOCK_WIDTH; x += CHARBLOCK_WIDTH) {
-            for (int y = 0; y < src.getHeight() - CHARBLOCK_HEIGHT; y += CHARBLOCK_HEIGHT) {
+        for (int x = 0; x < src_gray.getWidth() - CHARBLOCK_WIDTH; x += CHARBLOCK_WIDTH) {
+            for (int y = 0; y < src_gray.getHeight() - CHARBLOCK_HEIGHT; y += CHARBLOCK_HEIGHT) {
                 //计算block区域平均像素值，并转换为字符密度
                 int sum = 0;
                 for (int i = x; i < x + CHARBLOCK_WIDTH; i++) {
@@ -149,7 +164,8 @@ public class Main {
 
                 //将字符写入输出图片
                 for (Pair<Integer, Integer> p : charDrawUsed) {
-                    output.setRGB(x + p.getKey(), y + p.getValue(), 0);
+                    Color c = new Color(src.getRGB(x + p.getKey(), y + p.getValue()));
+                    output.setRGB(x + p.getKey(), y + p.getValue(), c.darker().getRGB());
                 }
 
             }
@@ -175,7 +191,7 @@ public class Main {
         //读配置文件（它是个图片）
         BufferedImage img = null;
         try {
-            img = ImageIO.read(new File("./EnjoyDrawingIt.jpg"));
+            img = ImageIO.read(new File("./EnjoyDrawingIt.cfg"));
         } catch (IOException e) {
             e.printStackTrace();
         }
