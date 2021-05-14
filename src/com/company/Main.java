@@ -52,6 +52,9 @@ public class Main {
         //压缩图片，仅在原图长度或宽度大于规定值时才压缩
         final int limitWidth = 2560;
         final int limitHeight = 1600;
+        //或者在原图过小时，为了保证最终效果，需要对原图进行拉伸
+        final int minWidth = 1920;
+        final int minHeight = 1080;
         BufferedImage src;
         if (srcOrigin.getWidth() > limitWidth || srcOrigin.getHeight() > limitHeight) {
             //在等比压缩的前提下，使压缩后的图片越大越好（长或宽之中的一个达到极限值）
@@ -62,6 +65,18 @@ public class Main {
             } else {
                 targetWidth = Math.round(srcOrigin.getWidth() * limitHeight / srcOrigin.getHeight());
                 targetHeight = limitHeight;
+            }
+            src = new BufferedImage(targetWidth, targetHeight, srcOrigin.getType());
+            src.getGraphics().drawImage(srcOrigin.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH), 0, 0, null);
+        } else if (srcOrigin.getWidth() < minWidth && srcOrigin.getHeight() < minHeight){
+            //在等比压缩的前提下，使压缩后的图片越大越好（长或宽之中的一个达到极限值）
+            int targetWidth, targetHeight;
+            if (srcOrigin.getWidth() * minHeight > srcOrigin.getHeight() * minWidth) {
+                targetWidth = minWidth;
+                targetHeight = Math.round(srcOrigin.getHeight() * minWidth / srcOrigin.getWidth());
+            } else {
+                targetWidth = Math.round(srcOrigin.getWidth() * minHeight / srcOrigin.getHeight());
+                targetHeight = minHeight;
             }
             src = new BufferedImage(targetWidth, targetHeight, srcOrigin.getType());
             src.getGraphics().drawImage(srcOrigin.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH), 0, 0, null);
@@ -164,8 +179,8 @@ public class Main {
 
                 //将字符写入输出图片
                 for (Pair<Integer, Integer> p : charDrawUsed) {
-                    Color c = new Color(src.getRGB(x + p.getKey(), y + p.getValue()));
-                    output.setRGB(x + p.getKey(), y + p.getValue(), c.darker().getRGB());
+//                    Color c = new Color(src.getRGB(x + p.getKey(), y + p.getValue()));
+                    output.setRGB(x + p.getKey(), y + p.getValue(), src.getRGB(x + p.getKey(), y + p.getValue()));
                 }
 
             }
