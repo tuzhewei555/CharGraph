@@ -22,8 +22,17 @@ public class Main {
     private static List<Set<Pair<Integer, Integer>>> list;
 
     public static void main(String[] args) {
+        String arg0 = "./EnjoyDrawingIt.cfg"; //默认配置文件pathname
+        String arg1 = "./pic01.jpg"; //默认输入图片pathname
+        String arg2 = "./result.jpg"; //默认输出图片pathname
+        if (args.length >= 3){
+            arg0 = args[0];
+            arg1 = args[1];
+            arg2 = args[2];
+        }
+
         //设置字符像素表
-        readConfigPicture();
+        readConfigPicture(arg0);
 
         //计算字符密度表
         //Map的key值Integer为字符密度，即字符包含的黑色像素的数量
@@ -44,7 +53,7 @@ public class Main {
         //读图片文件
         BufferedImage srcOrigin = null;
         try {
-            srcOrigin = ImageIO.read(new File("./pic01.jpg"));
+            srcOrigin = ImageIO.read(new File(arg1));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -179,7 +188,6 @@ public class Main {
 
                 //将字符写入输出图片
                 for (Pair<Integer, Integer> p : charDrawUsed) {
-//                    Color c = new Color(src.getRGB(x + p.getKey(), y + p.getValue()));
                     output.setRGB(x + p.getKey(), y + p.getValue(), src.getRGB(x + p.getKey(), y + p.getValue()));
                 }
 
@@ -187,7 +195,7 @@ public class Main {
         }
 
         try {
-            ImageIO.write(output, "JPG", new File("./result.jpg"));
+            ImageIO.write(output, "JPG", new File(arg2));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -196,7 +204,7 @@ public class Main {
     }
 
     //把图片当作配置文件读取，获取字符库
-    private static void readConfigPicture() {
+    private static void readConfigPicture(String configFilePathName) {
         //初始化字符像素表
         if (list == null) {
             list = new ArrayList<Set<Pair<Integer, Integer>>>();
@@ -206,7 +214,7 @@ public class Main {
         //读配置文件（它是个图片）
         BufferedImage img = null;
         try {
-            img = ImageIO.read(new File("./EnjoyDrawingIt.cfg"));
+            img = ImageIO.read(new File(configFilePathName));
         } catch (IOException e) {
             e.printStackTrace();
         }
