@@ -23,13 +23,18 @@ public class Main {
 
     public static void main(String[] args) {
         String arg0 = "./EnjoyDrawingIt.cfg"; //默认配置文件pathname
-        String arg1 = "./pic01.jpg"; //默认输入图片pathname
-        String arg2 = "./result.jpg"; //默认输出图片pathname
-        if (args.length >= 3){
+        String arg1 = "./比赛照片/4.jpeg"; //默认输入图片pathname
+        String arg2 = "./result4.jpg"; //默认输出图片pathname
+        String arg3 = "0.8"; //边框染色阈值默认值
+        if (args.length >= 3) {
             arg0 = args[0];
             arg1 = args[1];
             arg2 = args[2];
         }
+        if (args.length >= 4) {
+            arg3 = args[3];
+        }
+        int isFrameColored_Threshold = Math.round(255 * Float.parseFloat(arg3)); //是否对边框染色的阈值
 
         //设置字符像素表
         readConfigPicture(arg0);
@@ -77,7 +82,7 @@ public class Main {
             }
             src = new BufferedImage(targetWidth, targetHeight, srcOrigin.getType());
             src.getGraphics().drawImage(srcOrigin.getScaledInstance(targetWidth, targetHeight, Image.SCALE_SMOOTH), 0, 0, null);
-        } else if (srcOrigin.getWidth() < minWidth && srcOrigin.getHeight() < minHeight){
+        } else if (srcOrigin.getWidth() < minWidth && srcOrigin.getHeight() < minHeight) {
             //在等比压缩的前提下，使压缩后的图片越大越好（长或宽之中的一个达到极限值）
             int targetWidth, targetHeight;
             if (srcOrigin.getWidth() * minHeight > srcOrigin.getHeight() * minWidth) {
@@ -119,16 +124,16 @@ public class Main {
         int charDensityMax = Collections.max(densityMap.keySet());
         int charDensityMin = Collections.min(densityMap.keySet());
 
-        for (int x = CHARBLOCK_WIDTH-1; x < src.getWidth(); x += CHARBLOCK_WIDTH) {
-            for(int y=0;y<src.getHeight();y++){
-                if (pixels[x][y] >150) {
+        for (int x = CHARBLOCK_WIDTH - 1; x < src.getWidth(); x += CHARBLOCK_WIDTH) {
+            for (int y = 0; y < src.getHeight(); y++) {
+                if (pixels[x][y] > isFrameColored_Threshold) {
                     output.setRGB(x, y, src.getRGB(x, y));
                 }
             }
         }
-        for (int y = CHARBLOCK_HEIGHT-1; y < src.getHeight(); y += CHARBLOCK_HEIGHT) {
-            for(int x=0;x<src.getWidth();x++){
-                if (pixels[x][y] >150) {
+        for (int y = CHARBLOCK_HEIGHT - 1; y < src.getHeight(); y += CHARBLOCK_HEIGHT) {
+            for (int x = 0; x < src.getWidth(); x++) {
+                if (pixels[x][y] > isFrameColored_Threshold) {
                     output.setRGB(x, y, src.getRGB(x, y));
                 }
             }
@@ -218,8 +223,8 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        for (int x = 0; x < img.getWidth() - CHARBLOCK_WIDTH - 1; x += (CHARBLOCK_WIDTH + 1)) {
-            for (int y = 0; y < img.getHeight() - CHARBLOCK_HEIGHT - 1; y += (CHARBLOCK_HEIGHT + 1)) {
+        for (int x = 0; x < img.getWidth() - CHARBLOCK_WIDTH; x += (CHARBLOCK_WIDTH + 1)) {
+            for (int y = 0; y < img.getHeight() - CHARBLOCK_HEIGHT; y += (CHARBLOCK_HEIGHT + 1)) {
                 //读取block里画的字符
                 Set<Pair<Integer, Integer>> charDraw = new HashSet<>();
                 for (int i = x; i < x + CHARBLOCK_WIDTH; i++) {
