@@ -23,9 +23,9 @@ public class Main {
 
     public static void main(String[] args) {
         String arg0 = "./EnjoyDrawingIt.cfg"; //默认配置文件pathname
-        String arg1 = "./比赛照片/4.jpeg"; //默认输入图片pathname
-        String arg2 = "./result4.jpg"; //默认输出图片pathname
-        String arg3 = "0.8"; //边框染色阈值默认值
+        String arg1 = "./2.jpeg"; //默认输入图片pathname
+        String arg2 = "./result2.jpg"; //默认输出图片pathname
+        String arg3 = "1.0"; //边框染色阈值默认值
         if (args.length >= 3) {
             arg0 = args[0];
             arg1 = args[1];
